@@ -931,35 +931,33 @@ const CourseBuilder = () => {
                       )}
                       <div className="flex items-center pt-2 gap-3 flex-wrap">
                         {formData.type !== "one_to_one" && (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <p className="text-md text-[#06574C]">
-                                Paid
-                              </p>
-                              <Switch
-                                color="success"
-                                aria-label="Free or Paid course"
-                                isSelected={!formData.is_free}
-                                onValueChange={(val) => {
-                                  handleChange("is_free", !val);
-                                }}
-                              />
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-md text-[#06574C]">
-                                Trending
-                              </p>
-                              <Switch
-                                color="success"
-                                aria-label="Trending course"
-                                isSelected={!!formData.is_trending}
-                                onValueChange={(val) => {
-                                  handleChange("is_trending", val);
-                                }}
-                              />
-                            </div>
-                          </>
+                          <div className="flex items-center gap-2">
+                            <p className="text-md text-[#06574C]">
+                              Paid
+                            </p>
+                            <Switch
+                              color="success"
+                              aria-label="Free or Paid course"
+                              isSelected={!formData.is_free}
+                              onValueChange={(val) => {
+                                handleChange("is_free", !val);
+                              }}
+                            />
+                          </div>
                         )}
+                        <div className="flex items-center gap-2">
+                          <p className="text-md text-[#06574C]">
+                            Trending
+                          </p>
+                          <Switch
+                            color="success"
+                            aria-label="Trending course"
+                            isSelected={!!formData.is_trending}
+                            onValueChange={(val) => {
+                              handleChange("is_trending", val);
+                            }}
+                          />
+                        </div>
                         <div className="flex items-center gap-2 ml-auto">
                           <p className="text-sm font-medium text-gray-700">
                             Course Status:
