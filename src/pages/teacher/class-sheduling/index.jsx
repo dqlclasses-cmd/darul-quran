@@ -159,7 +159,7 @@ const TeacherClassSheduling = () => {
     limit: "30",
     status: filterStatus === "all" ? undefined : filterStatus,
   });
-   const [deleteSchedule, { isLoading: isCancelling }] =
+  const [deleteSchedule, { isLoading: isCancelling }] =
     useDeleteScheduleMutation();
   const [addScheduleNote, { isLoading: isSavingNote }] =
     useAddScheduleNoteMutation();
@@ -562,11 +562,10 @@ const TeacherClassSheduling = () => {
 
     return (
       <div
-        className={`p-4 rounded-lg mb-3 relative transition-shadow ${
-          isCancelled
-            ? "bg-red-50/90 border-2 border-dashed border-red-300 shadow-none"
-            : "bg-white border border-gray-100 shadow-sm hover:shadow-md"
-        }`}
+        className={`p-4 rounded-lg mb-3 relative transition-shadow ${isCancelled
+          ? "bg-red-50/90 border-2 border-dashed border-red-300 shadow-none"
+          : "bg-white border border-gray-100 shadow-sm hover:shadow-md"
+          }`}
       >
         {isCancelled && (
           <div className="mb-3 px-3 py-2 bg-red-100 border border-red-200 rounded-md text-red-800 text-sm font-medium">
@@ -633,16 +632,14 @@ const TeacherClassSheduling = () => {
         )}
 
         <div className="flex flex-wrap gap-4 mb-4">
-          <div className="flex text-[#666666] text-sm items-center gap-2">
-            {type === "normal" ? (
-              "Created At: "
-            ) : (
-              <CiCalendar color="#666666" size={20} />
-            )}
-            <p className="text-[#666666] text-sm">
-              {dateFormatter(schedule.createdAt)}
-            </p>
-          </div>
+           {type === "normal" && (<div className="flex text-[#666666] text-sm items-center gap-2">
+           
+              <p className="text-[#666666] text-sm">
+                Created At:   {dateFormatter(schedule.createdAt)}
+              </p>
+
+           
+          </div> )}
           <div className="flex items-center gap-2">
             <Clock color={isCancelled ? "#dc2626" : "#666666"} size={18} />
             <p className={`text-md ${isCancelled ? "text-gray-400 line-through" : "text-[#666666]"}`}>
@@ -894,16 +891,16 @@ const TeacherClassSheduling = () => {
         desc="View and manage your upcoming live course's schedules"
       />
       {/* <div className="flex items-center max-sm:flex-wrap gap-2"> */}
-        <Tabs
-          color="success"
-          variant="underlined"
-          selectedKey={viewType}
-          className="flex items-center max-sm: flex-wrap gap-2"
-          onSelectionChange={setViewType}
-        >
-          <Tab key="normal" title="View Schedule By Course" />
-          <Tab key="allDates" title="View Schedule By Date" />
-        </Tabs>
+      <Tabs
+        color="success"
+        variant="underlined"
+        selectedKey={viewType}
+        className="flex items-center max-sm: flex-wrap gap-2"
+        onSelectionChange={setViewType}
+      >
+        <Tab key="normal" title="View Schedule By Course" />
+        <Tab key="allDates" title="View Schedule By Date" />
+      </Tabs>
       {/* </div> */}
       <div className="grid grid-cols-12 gap-4 items-start mt-4">
         {viewType === "allDates" ? (
@@ -1045,114 +1042,113 @@ const TeacherClassSheduling = () => {
                 {schedulesForSelectedDate.map((schedule) => {
                   const dateCancelled = isScheduleDateCancelled(schedule, schedule.date);
                   return (
-                  <div
-                    key={schedule.id}
-                    className={`rounded-lg p-4 transition-shadow ${
-                      dateCancelled
+                    <div
+                      key={schedule.id}
+                      className={`rounded-lg p-4 transition-shadow ${dateCancelled
                         ? "bg-red-50/90 border-2 border-dashed border-red-300"
                         : "bg-white border border-gray-200 hover:shadow-md"
-                    }`}
-                  >
-                    {dateCancelled && (
-                      <div className="mb-3 px-3 py-2 bg-red-100 border border-red-200 rounded-md text-red-800 text-sm font-medium">
-                        This class date has been cancelled.
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {getClassStatusBadge(schedule, "single", dateCancelled)}
-                      {schedule.courseName && (
-                        <Chip
+                        }`}
+                    >
+                      {dateCancelled && (
+                        <div className="mb-3 px-3 py-2 bg-red-100 border border-red-200 rounded-md text-red-800 text-sm font-medium">
+                          This class date has been cancelled.
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {getClassStatusBadge(schedule, "single", dateCancelled)}
+                        {schedule.courseName && (
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            className="bg-[#95C4BE33] text-[#06574C]"
+                          >
+                            Course: {schedule.courseName}
+                          </Chip>
+                        )}
+                        <Button
                           size="sm"
-                          variant="flat"
-                          className="bg-[#95C4BE33] text-[#06574C]"
+                          color="success"
+                          radius="sm"
+                          onPress={() => handleAddNote(schedule, schedule.date)}
                         >
-                          Course: {schedule.courseName}
-                        </Chip>
-                      )}
-                      <Button
-                        size="sm"
-                        color="success"
-                        radius="sm"
-                        onPress={() => handleAddNote(schedule, schedule.date)}
-                      >
-                        {schedule?.notes?.[schedule.date] ? "Update Note" : "Add Note"}
-                      </Button>
-                      {!dateCancelled && (
-                      <Button
-                        size="sm"
-                        color="primary"
-                        variant="flat"
-                        radius="sm"
-                        onPress={() => handleQuickRescheduleClick(schedule, schedule.date)}
-                      >
-                        Quick Reschedule
-                      </Button>
-                      )}
-                    </div>
-                    <h3 className={`text-lg font-bold mb-2 ${dateCancelled ? "text-gray-500 line-through decoration-red-400" : "text-gray-800"}`}>
-                      {schedule.title}
-                    </h3>
-
-                    {schedule.description && (
-                      <p className={`text-sm mb-3 ${dateCancelled ? "text-gray-400 line-through" : "text-gray-600"}`}>
-                        {schedule.description}
-                      </p>
-                    )}
-
-                    <div className="flex flex-col gap-2 mb-4">
-                      <div className="flex items-center gap-2 text-gray-600 text-sm">
-                        <CiCalendar size={18} />
-                        {(() => {
-                          const dateKey = selectedDate instanceof Date
-                            ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
-                            : selectedDate;
-                          const hasSpecificDate = schedule.specificDates && typeof schedule.specificDates === 'object' && schedule.specificDates[dateKey];
-
-                          return hasSpecificDate ? (
-                            <span>{dateFormatter(selectedDate)}</span>
-                          ) : (
-                            <span>{dateFormatter(getScheduleStart(schedule) || schedule.date)}</span>
-                          );
-                        })()}
+                          {schedule?.notes?.[schedule.date] ? "Update Note" : "Add Note"}
+                        </Button>
+                        {!dateCancelled && (
+                          <Button
+                            size="sm"
+                            color="primary"
+                            variant="flat"
+                            radius="sm"
+                            onPress={() => handleQuickRescheduleClick(schedule, schedule.date)}
+                          >
+                            Quick Reschedule
+                          </Button>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600 text-sm">
-                        <Clock size={18} />
-                        <span>
+                      <h3 className={`text-lg font-bold mb-2 ${dateCancelled ? "text-gray-500 line-through decoration-red-400" : "text-gray-800"}`}>
+                        {schedule.title}
+                      </h3>
+
+                      {schedule.description && (
+                        <p className={`text-sm mb-3 ${dateCancelled ? "text-gray-400 line-through" : "text-gray-600"}`}>
+                          {schedule.description}
+                        </p>
+                      )}
+
+                      <div className="flex flex-col gap-2 mb-4">
+                        <div className="flex items-center gap-2 text-gray-600 text-sm">
+                          <CiCalendar size={18} />
                           {(() => {
                             const dateKey = selectedDate instanceof Date
                               ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
                               : selectedDate;
-                            const specificTime = schedule.specificDates?.[dateKey];
+                            const hasSpecificDate = schedule.specificDates && typeof schedule.specificDates === 'object' && schedule.specificDates[dateKey];
 
-                            return (specificTime && specificTime.startTime && specificTime.endTime) ? (
-                              `${formatTime12Hour(getScheduleStart({ ...schedule, date: dateKey, startTime: specificTime.startTime }, dateKey))} - ${formatTime12Hour(getScheduleEnd({ ...schedule, date: dateKey, endTime: specificTime.endTime }, dateKey))}`
+                            return hasSpecificDate ? (
+                              <span>{dateFormatter(selectedDate)}</span>
                             ) : (
-                              `${formatTime12Hour(getScheduleStart(schedule, dateKey))} - ${formatTime12Hour(getScheduleEnd(schedule, dateKey))}`
+                              <span>{dateFormatter(getScheduleStart(schedule) || schedule.date)}</span>
                             );
                           })()}
-                        </span>
-                      </div>
-                      {schedule.notes && schedule?.notes?.["2026-04-07"] &&
-                        <div className="bg-amber-50 border-l-4 border-success p-3 mb-3 rounded-r-md">
-                          <p className="text-sm font-semibold text-amber-800 mb-1">Schedule Note:</p>
-                          <p className="text-sm text-amber-900">{schedule.notes[schedule.date]}</p>
-                        </div>}
-                      {schedule.meetingLink && (
-                        <div className="flex items-center gap-2 text-gray-600 text-sm">
-                          <Video size={18} />
-                          <span>Zoom Class Available</span>
                         </div>
-                      )}
-                      {schedule.teacherName && (
                         <div className="flex items-center gap-2 text-gray-600 text-sm">
-                          <User size={18} />
-                          <span>{schedule.teacherName}</span>
-                        </div>
-                      )}
-                    </div>
+                          <Clock size={18} />
+                          <span>
+                            {(() => {
+                              const dateKey = selectedDate instanceof Date
+                                ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
+                                : selectedDate;
+                              const specificTime = schedule.specificDates?.[dateKey];
 
-                    <Divider className="my-3" />
-                  </div>
+                              return (specificTime && specificTime.startTime && specificTime.endTime) ? (
+                                `${formatTime12Hour(getScheduleStart({ ...schedule, date: dateKey, startTime: specificTime.startTime }, dateKey))} - ${formatTime12Hour(getScheduleEnd({ ...schedule, date: dateKey, endTime: specificTime.endTime }, dateKey))}`
+                              ) : (
+                                `${formatTime12Hour(getScheduleStart(schedule, dateKey))} - ${formatTime12Hour(getScheduleEnd(schedule, dateKey))}`
+                              );
+                            })()}
+                          </span>
+                        </div>
+                        {schedule.notes && schedule?.notes?.["2026-04-07"] &&
+                          <div className="bg-amber-50 border-l-4 border-success p-3 mb-3 rounded-r-md">
+                            <p className="text-sm font-semibold text-amber-800 mb-1">Schedule Note:</p>
+                            <p className="text-sm text-amber-900">{schedule.notes[schedule.date]}</p>
+                          </div>}
+                        {schedule.meetingLink && (
+                          <div className="flex items-center gap-2 text-gray-600 text-sm">
+                            <Video size={18} />
+                            <span>Zoom Class Available</span>
+                          </div>
+                        )}
+                        {schedule.teacherName && (
+                          <div className="flex items-center gap-2 text-gray-600 text-sm">
+                            <User size={18} />
+                            <span>{schedule.teacherName}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <Divider className="my-3" />
+                    </div>
                   );
                 })}
               </div>
@@ -1364,81 +1360,81 @@ const TeacherClassSheduling = () => {
                     const convertedEnd = formatTimeInViewerTimezone(request.requestedDate, request.requestedEndTime, studentTz, viewerTz);
 
                     return (
-                    <TableRow key={request.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-sm">{request.studentName}</p>
-                          <p className="text-xs text-gray-500">{request.studentEmail}</p>
-                          <Chip size="sm" variant="flat" color="secondary" className="mt-1 text-xs">
-                            <Globe size={11} className="inline mr-1" />
-                            {studentTz}
-                          </Chip>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm space-y-1">
+                      <TableRow key={request.id}>
+                        <TableCell>
                           <div>
-                            <p className="font-medium text-[#06574C]">
-                              {new Date(request.requestedDate).toLocaleDateString()}
-                            </p>
-                            <p className="text-gray-700 font-semibold">
-                              {formatTime12Hour(request.requestedStartTime)} - {formatTime12Hour(request.requestedEndTime)}
-                              <span className="text-xs font-normal text-gray-500 ml-1">({studentTz})</span>
-                            </p>
-                          </div>
-                          {isDifferentTz && (
-                            <div className="bg-[#E8F1FF] text-[#1570E8] p-1.5 rounded text-xs">
-                              <p className="font-semibold">Your Local Time ({viewerTz}):</p>
-                              <p>{convertedDate} | {convertedStart} - {convertedEnd}</p>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-sm max-w-xs truncate" title={request.reason}>
-                          {request.reason || "-"}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <Chip size="sm" variant="flat" color={getStatusColor(request.status)}>
-                          {request.status}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-sm">
-                          {new Date(request.requestedAt).toLocaleDateString()}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2 justify-center">
-                          {request.status === "pending" && (
-                            <>
-                              <Button
-                                size="sm"
-                                color="success"
-                                variant="flat"
-                                onPress={() => handleApproveClick(request)}
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                color="danger"
-                                variant="flat"
-                                onPress={() => handleRejectClick(request)}
-                              >
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                          {request.status !== "pending" && (
-                            <Chip size="sm" variant="flat">
-                              {request.status}
+                            <p className="font-medium text-sm">{request.studentName}</p>
+                            <p className="text-xs text-gray-500">{request.studentEmail}</p>
+                            <Chip size="sm" variant="flat" color="secondary" className="mt-1 text-xs">
+                              <Globe size={11} className="inline mr-1" />
+                              {studentTz}
                             </Chip>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm space-y-1">
+                            <div>
+                              <p className="font-medium text-[#06574C]">
+                                {new Date(request.requestedDate).toLocaleDateString()}
+                              </p>
+                              <p className="text-gray-700 font-semibold">
+                                {formatTime12Hour(request.requestedStartTime)} - {formatTime12Hour(request.requestedEndTime)}
+                                <span className="text-xs font-normal text-gray-500 ml-1">({studentTz})</span>
+                              </p>
+                            </div>
+                            {isDifferentTz && (
+                              <div className="bg-[#E8F1FF] text-[#1570E8] p-1.5 rounded text-xs">
+                                <p className="font-semibold">Your Local Time ({viewerTz}):</p>
+                                <p>{convertedDate} | {convertedStart} - {convertedEnd}</p>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <p className="text-sm max-w-xs truncate" title={request.reason}>
+                            {request.reason || "-"}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <Chip size="sm" variant="flat" color={getStatusColor(request.status)}>
+                            {request.status}
+                          </Chip>
+                        </TableCell>
+                        <TableCell>
+                          <p className="text-sm">
+                            {new Date(request.requestedAt).toLocaleDateString()}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2 justify-center">
+                            {request.status === "pending" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  color="success"
+                                  variant="flat"
+                                  onPress={() => handleApproveClick(request)}
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  color="danger"
+                                  variant="flat"
+                                  onPress={() => handleRejectClick(request)}
+                                >
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            {request.status !== "pending" && (
+                              <Chip size="sm" variant="flat">
+                                {request.status}
+                              </Chip>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     );
                   }}
                 </TableBody>
@@ -1487,30 +1483,30 @@ const TeacherClassSheduling = () => {
               const convertedEnd = formatTimeInViewerTimezone(selectedRescheduleRequest.requestedDate, selectedRescheduleRequest.requestedEndTime, studentTz, viewerTz);
 
               return (
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-1">
-                  <strong>Student:</strong> {selectedRescheduleRequest.studentName} ({selectedRescheduleRequest.studentEmail})
-                </p>
-                <p className="text-sm text-gray-600 mb-2">
-                  <strong>Class:</strong> {selectedRescheduleRequest.scheduleTitle}
-                </p>
-                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-0.5">
-                      Student Requested Time ({studentTz}):
-                    </p>
-                    <p className="text-sm font-medium text-gray-800">
-                      {new Date(selectedRescheduleRequest.requestedDate).toLocaleDateString()} &bull; {formatTime12Hour(selectedRescheduleRequest.requestedStartTime)} - {formatTime12Hour(selectedRescheduleRequest.requestedEndTime)}
-                    </p>
-                  </div>
-                  {isDifferentTz && (
-                    <div className="bg-[#E8F1FF] text-[#1570E8] p-2 rounded text-xs font-medium">
-                      <p className="font-semibold mb-0.5">Your Local Time ({viewerTz}):</p>
-                      <p className="text-sm font-bold">{convertedDate} &bull; {convertedStart} - {convertedEnd}</p>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-1">
+                    <strong>Student:</strong> {selectedRescheduleRequest.studentName} ({selectedRescheduleRequest.studentEmail})
+                  </p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    <strong>Class:</strong> {selectedRescheduleRequest.scheduleTitle}
+                  </p>
+                  <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 mb-0.5">
+                        Student Requested Time ({studentTz}):
+                      </p>
+                      <p className="text-sm font-medium text-gray-800">
+                        {new Date(selectedRescheduleRequest.requestedDate).toLocaleDateString()} &bull; {formatTime12Hour(selectedRescheduleRequest.requestedStartTime)} - {formatTime12Hour(selectedRescheduleRequest.requestedEndTime)}
+                      </p>
                     </div>
-                  )}
+                    {isDifferentTz && (
+                      <div className="bg-[#E8F1FF] text-[#1570E8] p-2 rounded text-xs font-medium">
+                        <p className="font-semibold mb-0.5">Your Local Time ({viewerTz}):</p>
+                        <p className="text-sm font-bold">{convertedDate} &bull; {convertedStart} - {convertedEnd}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
               );
             })()}
 
