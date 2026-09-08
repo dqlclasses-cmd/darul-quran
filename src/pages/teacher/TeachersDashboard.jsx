@@ -29,6 +29,8 @@ import {
   Video,
   Check,
   Lock,
+  ArrowRight,
+  CalendarDays,
 } from "lucide-react";
 import OverviewCards from "../../components/dashboard-components/OverviewCards";
 import {
@@ -401,156 +403,31 @@ const TeachersDashboard = () => {
         </div>
       </div>
 
-      <div className=" bg-white rounded-lg mb-3 ">
-        <h1 className="p-3 text-xl text-[#333333]">Today's Upcoming Classes</h1>
-        <div className="flex flex-col gap-3">
-          {loading ? (
-            // 🔥 Skeleton Loader (3 dummy rows)
-            Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="rounded-md p-4 bg-gray-100 animate-pulse"
-              >
-                <div className="flex flex-col md:flex-row gap-4 md:justify-between md:items-center">
-
-                  {/* Left Section */}
-                  <div className="flex flex-col md:flex-row gap-3 md:items-center">
-
-                    {/* Date Circle Skeleton */}
-                    <div className="h-20 w-20 rounded-full bg-gray-300"></div>
-
-                    {/* Text Content */}
-                    <div className="space-y-3">
-                      <div className="h-4 w-48 bg-gray-300 rounded"></div>
-                      <div className="h-3 w-64 bg-gray-200 rounded"></div>
-                      <div className="h-3 w-32 bg-gray-200 rounded"></div>
-                    </div>
-                  </div>
-
-                  {/* Button Skeleton */}
-                  <div className="h-10 w-32 bg-gray-300 rounded-md"></div>
-                </div>
-              </div>
-            ))
-          ) : upcomingClasses.length === 0 ? (
-            <div className="p-4 text-gray-500 text-center bg-[#F5E3DA]/20 rounded-lg">
-              No today classes found.
+      <div className="bg-white rounded-lg mb-3 p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-lg bg-[#EAF3F2] flex items-center justify-center">
+              <CalendarDays size={22} className="text-[#06574C]" />
             </div>
-          ) : upcomingClasses.map((item, index) => {
-            const allDates = item.schedule_dates || item.scheduleDates || [];
-            const todayStr = new Date().toISOString().split('T')[0];
-            const upcomingDates = allDates.filter(d => d >= todayStr);
-            const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
-            const classStart = getScheduleStart({ ...item, date: nextClassDate }, nextClassDate);
-            const classEnd = getScheduleEnd({ ...item, date: nextClassDate }, nextClassDate);
-            const displayDate = classStart || new Date();
-            return (
-              <div
-                key={index}
-                className={`${item.meeting_link ? "bg-[#EAF3F2]" : "bg-[#F5E3DA]"
-                  } rounded-md`}
-              >
-                <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-center">
-                  <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
-                    <div className="h-20 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
-                      <p className="text-[16px] text-[#06574C] font-semibold">
-                        {dateFormatter(displayDate)?.split(",")[0]} <br />
-                        {dateFormatter(displayDate)?.split(",")[1]?.split("20")[0]}
-                      </p>
-                    </div>
-                    <div>
-                      <div className="text-lg text-[#06574C] font-semibold">
-                        {item.title}
-                      </div>
-                      <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
-                        <div className="flex items-center gap-1 ">
-                          <Clock size={20} />
-                          {formatTime12Hour(classStart)} - {formatTime12Hour(classEnd)}
-                        </div>
-                        <div className="flex items-center gap-1 ">
-                          <Video size={20} />
-                          {item.meeting_link ? "Online (Zoom)" : "Pending"}
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <Button size="sm" className="bg-white text-[#06574C]">
-                          {item.course_name || "General Class"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    {(() => {
-                      const live = isClassLive(item);
-                      const expired = isClassExpired(item);
 
-                      const dateStr = nextClassDate?.includes('T') ? nextClassDate.split('T')[0] : nextClassDate;
-                      const hoursUntil = getHoursUntilClass(dateStr, classStart || item.start_time || item.startTime);
+            <div>
+              <h1 className="text-xl text-[#333333] font-semibold">
+                Today's Classes
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                View your complete class schedule and upcoming sessions.
+              </p>
+            </div>
+          </div>
 
-                      if (expired) {
-                        return (
-                          <Button
-                            startContent={<Check size={20} />}
-                            size="sm"
-                            className="bg-gray-400 w-32 text-white rounded-md"
-                            isDisabled
-                          >
-                            Completed
-                          </Button>
-                        );
-                      } else if (live && item.meeting_link) {
-                        return (
-                          <Button
-                            startContent={<Video size={20} />}
-                            size="sm"
-                            className="bg-green-600 w-32 text-white rounded-md animate-pulse"
-                            as={Link}
-                            to={item.meeting_link}
-                            target="_blank"
-                          >
-                            Start Class
-                          </Button>
-                        );
-                      } else if (item.meeting_link) {
-                        if (hoursUntil !== null && hoursUntil < 3 && hoursUntil > 0) {
-                          return (
-                            <Button
-                              startContent={<Clock size={20} />}
-                              size="sm"
-                              className="bg-[#95C4BE33] text-[#06574C] w-32 rounded-md"
-                            >
-                              Starts in {formatRemainingTime(hoursUntil)}
-                            </Button>
-                          );
-                        }
-
-                        return (
-                          <Button
-                            startContent={<Lock size={20} />}
-                            size="sm"
-                            className="bg-[#06574C] w-32 text-white rounded-md"
-                            isDisabled
-                          >
-                            Locked
-                          </Button>
-                        );
-                      } else {
-                        return (
-                          <Button
-                            startContent={<AiOutlineEye size={22} />}
-                            size="sm"
-                            className="bg-[#06574C] w-32 text-white rounded-md"
-                          >
-                            Details
-                          </Button>
-                        );
-                      }
-                    })()}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+          <Button
+            as={Link}
+            to="/teacher/class-scheduling"
+            endContent={<ArrowRight size={18} />}
+            className="bg-[#06574C] text-white rounded-md"
+          >
+            View Schedule
+          </Button>
         </div>
       </div>
       <div className="px-3 sm:px-6 py-4 rounded-lg bg-white my-4">
