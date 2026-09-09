@@ -22,11 +22,16 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { IoStarSharp } from "react-icons/io5";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDeleteCourseMutation, useGetAllCategoriesQuery, useGetAllCoursesQuery, useGetCourseRelatedDataQuery } from "../../../redux/api/courses";
-import { errorMessage } from "../../../lib/toast.config";
+import {
+  useDeleteCourseMutation,
+  useGetAllCategoriesQuery,
+  useGetAllCoursesQuery,
+  useMoveCourseOrderMutation,
+} from "../../../redux/api/courses";
+import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { debounce } from "../../../lib/utils";
 import QueryError from "../../../components/QueryError";
 
@@ -39,6 +44,12 @@ const CourseManagement = () => {
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState(null);
   const [courseTypeFilter, setCourseTypeFilter] = useState('all');
+  const [trendingFilter, setTrendingFilter] = useState('all');
+  const [sortKey, setSortKey] = useState('order');
+  const [sortDir, setSortDir] = useState('asc');
+  const [movingId, setMovingId] = useState(null);
+
+  const sortParam = `${sortKey}_${sortDir}`;
 
   // Query/Fetch
   const { data, isFetching: isLoading, isError, error, refetch } = useGetAllCoursesQuery({
@@ -48,10 +59,72 @@ const CourseManagement = () => {
     status,
     search,
     type: courseTypeFilter,
+    sort: sortParam,
+    isTrending:
+      trendingFilter === "trending"
+        ? true
+        : trendingFilter === "non_trending"
+          ? false
+          : undefined,
   });
   const { data: categoriesData, isError: categoriesError, error: categoriesErrorData } = useGetAllCategoriesQuery();
   // Mutation/Action
   const [deleteProduct] = useDeleteCourseMutation();
+  const [moveCourseOrder] = useMoveCourseOrderMutation();
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(key === "order" ? "asc" : "desc");
+    }
+    setPage(1);
+  };
+
+  const renderSortLabel = (label, sortField, align = "left") => {
+    const isActive = sortKey === sortField;
+    return (
+      <button
+        type="button"
+        onClick={() => handleSort(sortField)}
+        className={`inline-flex items-center gap-1 font-bold text-sm text-[#333333] capitalize tracking-widest hover:text-[#06574C] ${
+          align === "center" ? "justify-center w-full" : ""
+        }`}
+      >
+        <span>{label}</span>
+        <span className="inline-flex flex-col leading-none">
+          <ChevronUp
+            size={12}
+            className={isActive && sortDir === "asc" ? "text-[#06574C]" : "text-gray-400"}
+          />
+          <ChevronDown
+            size={12}
+            className={`-mt-1 ${isActive && sortDir === "desc" ? "text-[#06574C]" : "text-gray-400"}`}
+          />
+        </span>
+      </button>
+    );
+  };
+
+  const handleMoveOrder = async (id, direction) => {
+    setMovingId(id);
+    try {
+      const res = await moveCourseOrder({
+        id,
+        direction,
+        type: courseTypeFilter,
+      });
+      if (res.error) {
+        throw new Error(res.error?.data?.message || "Failed to update order");
+      }
+      successMessage(direction === "up" ? "Moved up" : "Moved down");
+    } catch (err) {
+      errorMessage(err?.message || "Failed to update order");
+    } finally {
+      setMovingId(null);
+    }
+  };
 
   useEffect(() => {
     if (isError) {
@@ -82,6 +155,12 @@ const CourseManagement = () => {
     { key: "live", label: "Live Class" },
     { key: "in_person", label: "In-Person Classes" },
     { key: "one_to_one", label: "1:1 Class" },
+  ];
+
+  const trendingOptions = [
+    { key: "all", label: "All Courses" },
+    { key: "trending", label: "Trending" },
+    { key: "non_trending", label: "Non Trending" },
   ];
 
   
@@ -177,7 +256,7 @@ const CourseManagement = () => {
   }
   return (
     <div className="bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
-      <DashHeading desc={"Manage and monitor course catalog"} />
+      <DashHeading desc={"Manage and monitor course catalog — use ↑↓ arrows to set website display order"} />
       <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
         <div className="flex max-md:flex-wrap items-center gap-2">
           <Select
@@ -207,6 +286,21 @@ const CourseManagement = () => {
             placeholder="Select course type"
           >
             {courseTypes.map((item) => (
+              <SelectItem key={item.key}>{item.label}</SelectItem>
+            ))}
+          </Select>
+          <Select
+            className="min-w-[150px]"
+            radius="sm"
+            defaultSelectedKeys={["all"]}
+            onSelectionChange={(k) => {
+              const keys = [...k];
+              setTrendingFilter(keys[0]);
+              setPage(1);
+            }}
+            placeholder="Trending filter"
+          >
+            {trendingOptions.map((item) => (
               <SelectItem key={item.key}>{item.label}</SelectItem>
             ))}
           </Select>
@@ -252,22 +346,39 @@ const CourseManagement = () => {
             align="center"
             classNames={{
               base: "table-fixed w-full bg-white rounded-lg min-h-[500px] overflow-y-auto",
-              th: "font-bold p-4 text-sm text-[#333333] capitalize tracking-widest bg-[#EBD4C936] cursor-default",
+              th: "font-bold p-4 text-sm text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
               td: "py-3 align-center",
               tr: "border-b border-default-200 last:border-b-0 hover:bg-[#EBD4C936]",
             }}
           >
             <TableHeader>
+              <TableColumn className="w-16 text-center">
+                {renderSortLabel("Order", "order", "center")}
+              </TableColumn>
               <TableColumn className="w-1/4">Thumbnail</TableColumn>
-              <TableColumn className="w-1/4">Details</TableColumn>
-              <TableColumn className="w-2/6 text-center">Type</TableColumn>
+              <TableColumn className="w-1/4">
+                {renderSortLabel("Details", "name")}
+              </TableColumn>
+              <TableColumn className="w-2/6 text-center">
+                {renderSortLabel("Type", "type", "center")}
+              </TableColumn>
               <TableColumn className="w-1/6 text-center">Category</TableColumn>
               <TableColumn className="w-1/6">Teacher</TableColumn>
-              <TableColumn className="w-1/12 text-center">Price</TableColumn>
-              <TableColumn className="w-1/12 text-center">Enrolled</TableColumn>
-              <TableColumn className="w-1/12 text-center">Status</TableColumn>
-              <TableColumn className="w-1/12 text-center">Trending</TableColumn>
-              <TableColumn className="w-1/6">Rating</TableColumn>
+              <TableColumn className="w-1/12 text-center">
+                {renderSortLabel("Price", "price", "center")}
+              </TableColumn>
+              <TableColumn className="w-1/12 text-center">
+                {renderSortLabel("Enrolled", "enrolled", "center")}
+              </TableColumn>
+              <TableColumn className="w-1/12 text-center">
+                {renderSortLabel("Status", "status", "center")}
+              </TableColumn>
+              <TableColumn className="w-1/12 text-center">
+                {renderSortLabel("Trending", "trending", "center")}
+              </TableColumn>
+              <TableColumn className="w-1/6">
+                {renderSortLabel("Rating", "rating")}
+              </TableColumn>
               <TableColumn className="w-24">Actions</TableColumn>
             </TableHeader>
 
@@ -276,8 +387,49 @@ const CourseManagement = () => {
               emptyContent={"  No Course Found."}
               loadingState={isLoading ? "loading" : "idle"}
             >
-              {data?.courses?.map((classItem) => (
+              {data?.courses?.map((classItem, index) => {
+                const globalIndex = (page - 1) * limit + index;
+                const isFirst = globalIndex === 0;
+                const isLast = globalIndex >= (data?.total ?? 0) - 1;
+                const isMoving = movingId === classItem.id;
+
+                return (
                 <TableRow key={classItem.id}>
+                  <TableCell>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-xs font-semibold text-[#06574C]">
+                        {classItem.displayOrder || globalIndex + 1}
+                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          color="success"
+                          aria-label="Move up"
+                          isDisabled={isFirst || isMoving || !!movingId}
+                          isLoading={isMoving}
+                          onPress={() => handleMoveOrder(classItem.id, "up")}
+                          className="min-w-6 w-6 h-6"
+                        >
+                          <ChevronUp size={14} />
+                        </Button>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          color="success"
+                          aria-label="Move down"
+                          isDisabled={isLast || isMoving || !!movingId}
+                          isLoading={isMoving}
+                          onPress={() => handleMoveOrder(classItem.id, "down")}
+                          className="min-w-6 w-6 h-6"
+                        >
+                          <ChevronDown size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  </TableCell>
                   <TableCell >
                     <Image src={classItem.thumbnail ?? ''}
                       width={50}
@@ -389,7 +541,8 @@ const CourseManagement = () => {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </div>

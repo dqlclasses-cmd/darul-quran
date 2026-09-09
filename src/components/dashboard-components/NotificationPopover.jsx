@@ -6,6 +6,7 @@ import { useGetNotificationsQuery, useMarkAsReadMutation } from '../../redux/api
 import { useSelector } from 'react-redux'
 import { Link, useLocation } from 'react-router-dom'
 import { dateFormatter } from '../../lib/utils'
+import { resolveNotificationUrl } from '../../lib/notificationLinks'
 
 const NotificationPopover = ({ isHomeMob = false }) => {
     const { pathname } = useLocation();
@@ -122,16 +123,16 @@ const NotificationPopover = ({ isHomeMob = false }) => {
                                             {notification.title}
                                         </div>
                                         <div className="text-xs text-gray-500">
-                                            {notification.content}
+                                            {notification.description}
                                         </div>
                                         <div className="flex items-center w-full gap-2 justify-between">
-                                            {notification?.url && (
+                                            {resolveNotificationUrl(notification?.url, user?.role, notification) && (
                                                 <Link
-                                                    to={(notification.url || "#").replace("ROLE", user?.role)}
+                                                    to={resolveNotificationUrl(notification.url, user?.role, notification)}
                                                     className="underline text-[12px] text-[#406c65] hover:opacity-80 transition-opacity"
                                                     onClick={() => markAsRead({ id: notification.id })}
                                                 >
-                                                    View
+                                                    View Details
                                                 </Link>
                                             )}
                                             <span className='text-xs text-[#406c65]'>{dateFormatter(notification.created_at, true)}</span>
