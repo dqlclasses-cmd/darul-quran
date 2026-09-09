@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
     Button,
     Chip,
@@ -22,18 +23,21 @@ import {
 import { DashHeading } from "../components/dashboard-components/DashHeading";
 import {
     useGetRescheduleRequestsQuery,
+    useGetRescheduleRequestByIdQuery,
     useApproveRescheduleRequestMutation,
     useRejectRescheduleRequestMutation,
 } from "../redux/api/reschedule";
 import { errorMessage, successMessage } from "../lib/toast.config";
 import { formatTime12Hour, formatTimeInViewerTimezone, formatDateInViewerTimezone } from "../utils/scheduleHelpers";
-import { Calendar as CalendarIcon, Globe } from "lucide-react";
+import { Calendar as CalendarIcon, Eye, Globe } from "lucide-react";
 
 const AdminRescheduleRequests = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [page, setPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState("all");
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [adminResponse, setAdminResponse] = useState("");
     const [actionType, setActionType] = useState(null);
 
@@ -42,14 +46,30 @@ const AdminRescheduleRequests = () => {
         limit: "10",
         status: statusFilter,
     });
+
+    const deepLinkRequestId = searchParams.get("requestId");
+    const { data: deepLinkRequestData } = useGetRescheduleRequestByIdQuery(
+        deepLinkRequestId,
+        { skip: !deepLinkRequestId },
+    );
+
     useEffect(() => {
-        if (data) {
-            console.log("Reschedule Requests Data:", data);
-        }
-    }, [data]);
+        const request = deepLinkRequestData?.request || deepLinkRequestData;
+        if (!deepLinkRequestId || !request?.id) return;
+        setSelectedRequest(request);
+        setIsViewModalOpen(true);
+        const next = new URLSearchParams(searchParams);
+        next.delete("requestId");
+        setSearchParams(next, { replace: true });
+    }, [deepLinkRequestId, deepLinkRequestData]);
 
     const [approveRequest, { isLoading: isApproving }] = useApproveRescheduleRequestMutation();
     const [rejectRequest, { isLoading: isRejecting }] = useRejectRescheduleRequestMutation();
+
+    const handleViewClick = (request) => {
+        setSelectedRequest(request);
+        setIsViewModalOpen(true);
+    };
 
     const handleApproveClick = (request) => {
         setSelectedRequest(request);
@@ -259,6 +279,15 @@ const AdminRescheduleRequests = () => {
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex gap-2 justify-center">
+                                        <Button
+                                            size="sm"
+                                            variant="bordered"
+                                            className="border-[#06574C] text-[#06574C]"
+                                            startContent={<Eye size={14} />}
+                                            onPress={() => handleViewClick(request)}
+                                        >
+                                            View
+                                        </Button>
                                         {request.status === "pending" && (
                                             <>
                                                 <Button
@@ -278,11 +307,6 @@ const AdminRescheduleRequests = () => {
                                                     Reject
                                                 </Button>
                                             </>
-                                        )}
-                                        {request.status !== "pending" && (
-                                            <Chip size="sm" variant="flat">
-                                                {request.status}
-                                            </Chip>
                                         )}
                                     </div>
                                 </TableCell>
@@ -381,6 +405,120 @@ const AdminRescheduleRequests = () => {
                         >
                             {isApproving || isRejecting ? "Processing..." : actionType === "approve" ? "Approve" : "Reject"}
                         </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            <Modal
+                isOpen={isViewModalOpen}
+                onClose={() => setIsViewModalOpen(false)}
+                size="lg"
+            >
+                <ModalContent>
+                    <ModalHeader>
+                        <h2 className="text-lg font-semibold">Reschedule Request Details</h2>
+                    </ModalHeader>
+                    <ModalBody>
+                        {selectedRequest && (() => {
+                            const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                            const studentTz = selectedRequest.studentTimezone || "Europe/London";
+                            const isDifferentTz = studentTz !== viewerTz;
+                            const convertedDate = formatDateInViewerTimezone(selectedRequest.requestedDate, selectedRequest.requestedStartTime, studentTz, viewerTz);
+                            const convertedStart = formatTimeInViewerTimezone(selectedRequest.requestedDate, selectedRequest.requestedStartTime, studentTz, viewerTz);
+                            const convertedEnd = formatTimeInViewerTimezone(selectedRequest.requestedDate, selectedRequest.requestedEndTime, studentTz, viewerTz);
+
+                            return (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div>
+                                            <p className="text-sm text-gray-500">Student</p>
+                                            <p className="font-semibold text-gray-900">
+                                                {selectedRequest.studentName}
+                                            </p>
+                                            <p className="text-sm text-gray-500">{selectedRequest.studentEmail}</p>
+                                        </div>
+                                        <Chip size="sm" variant="flat" color={getStatusColor(selectedRequest.status)}>
+                                            {selectedRequest.status}
+                                        </Chip>
+                                    </div>
+
+                                    <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+                                        <p className="text-sm">
+                                            <strong>Class:</strong> {selectedRequest.scheduleTitle}
+                                        </p>
+                                        <p className="text-sm">
+                                            <strong>Course:</strong> {selectedRequest.courseName}
+                                        </p>
+                                        <p className="text-sm">
+                                            <strong>Original:</strong>{" "}
+                                            {new Date(selectedRequest?.originaldate || selectedRequest.scheduleDate).toLocaleDateString()}{" "}
+                                            {formatTime12Hour(selectedRequest?.scheduleStartTime)}
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-[#E8F5F2] rounded-lg p-3 space-y-2">
+                                        <p className="text-xs font-semibold text-[#06574C]">Requested Schedule</p>
+                                        <p className="text-sm font-medium">
+                                            {new Date(selectedRequest.requestedDate).toLocaleDateString()} &bull;{" "}
+                                            {formatTime12Hour(selectedRequest.requestedStartTime)} -{" "}
+                                            {formatTime12Hour(selectedRequest.requestedEndTime)}
+                                            <span className="text-xs font-normal text-gray-500 ml-1">({studentTz})</span>
+                                        </p>
+                                        {isDifferentTz && (
+                                            <div className="bg-white text-[#1570E8] p-2 rounded text-xs">
+                                                <p className="font-semibold">Your Local Time ({viewerTz}):</p>
+                                                <p>{convertedDate} | {convertedStart} - {convertedEnd}</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="border border-[#EBD4C9] rounded-lg p-3">
+                                        <p className="text-xs font-semibold text-gray-500 mb-1">Reason for request</p>
+                                        <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                                            {selectedRequest.reason || "No reason provided"}
+                                        </p>
+                                    </div>
+
+                                    {selectedRequest.adminResponse && (
+                                        <div className="border border-gray-200 rounded-lg p-3">
+                                            <p className="text-xs font-semibold text-gray-500 mb-1">Admin response</p>
+                                            <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                                                {selectedRequest.adminResponse}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant="flat" onPress={() => setIsViewModalOpen(false)}>
+                            Close
+                        </Button>
+                        {selectedRequest?.status === "pending" && (
+                            <>
+                                <Button
+                                    color="success"
+                                    variant="flat"
+                                    onPress={() => {
+                                        setIsViewModalOpen(false);
+                                        handleApproveClick(selectedRequest);
+                                    }}
+                                >
+                                    Approve
+                                </Button>
+                                <Button
+                                    color="danger"
+                                    variant="flat"
+                                    onPress={() => {
+                                        setIsViewModalOpen(false);
+                                        handleRejectClick(selectedRequest);
+                                    }}
+                                >
+                                    Reject
+                                </Button>
+                            </>
+                        )}
                     </ModalFooter>
                 </ModalContent>
             </Modal>

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
   Button,
@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import {
   useGetAllTicketsQuery,
+  useGetTicketByIdQuery,
   useRespondToTicketMutation,
   useDeleteTicketMutation,
 } from "../../../redux/api/supportTickets";
@@ -49,6 +50,7 @@ const STATUS_COLORS = {
 
 const AdminSupportTickets = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
 
@@ -71,6 +73,22 @@ const AdminSupportTickets = () => {
 
   const tickets = data?.tickets || [];
   const totalPages = data?.totalPages || 1;
+  const deepLinkTicketId = searchParams.get("ticketId");
+
+  const { data: deepLinkTicketData } = useGetTicketByIdQuery(deepLinkTicketId, {
+    skip: !deepLinkTicketId,
+  });
+
+  // Deep-link from notifications: /admin/tickets?ticketId=123
+  useEffect(() => {
+    const ticket = deepLinkTicketData?.ticket || deepLinkTicketData;
+    if (!deepLinkTicketId || !ticket?.id) return;
+    setSelectedTicket(ticket);
+    viewModal.onOpen();
+    const next = new URLSearchParams(searchParams);
+    next.delete("ticketId");
+    setSearchParams(next, { replace: true });
+  }, [deepLinkTicketId, deepLinkTicketData]);
 
   const handleRespondOpen = (ticket) => {
     setSelectedTicket(ticket);

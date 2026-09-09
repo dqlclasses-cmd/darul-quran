@@ -21,11 +21,11 @@ export const courseApi = createApi({
     tagTypes: ["course", "reviews", "categories", "courseStudents", "courseAttendance", "WaitingList"],
     endpoints: (builder) => ({
         getAllCourses: builder.query({
-            query: ({ page, limit, categoryId, sort, categoryIds, search, status, type, difficulties, isFree }) => ({
+            query: ({ page, limit, categoryId, sort, categoryIds, search, status, type, difficulties, isFree, isTrending }) => ({
                 url: "/getAllCourses",
                 method: "GET",
                 params: {
-                    page, isFree, sort, limit, categoryId: categoryId ? categoryId : undefined, search, status, type,
+                    page, isFree, isTrending, sort, limit, categoryId: categoryId ? categoryId : undefined, search, status, type,
                     difficulties: difficulties?.length > 0 ? JSON.stringify(difficulties) : undefined,
                     categoryIds: categoryIds?.length > 0 ? JSON.stringify(categoryIds) : undefined
                 },
@@ -109,6 +109,22 @@ export const courseApi = createApi({
                 url: `/updateCourse/${id}`,
                 method: "PATCH",
                 body: data,
+            }),
+            invalidatesTags: ["course"],
+        }),
+        moveCourseOrder: builder.mutation({
+            query: ({ id, direction, type }) => ({
+                url: `/move-order/${id}`,
+                method: "PATCH",
+                body: { direction, type },
+            }),
+            invalidatesTags: ["course"],
+        }),
+        reorderCourses: builder.mutation({
+            query: (orderedIds) => ({
+                url: "/reorder",
+                method: "PATCH",
+                body: { orderedIds },
             }),
             invalidatesTags: ["course"],
         }),
@@ -230,6 +246,8 @@ export const {
     useGetCourseStudentsQuery,
     useAddCourseMutation,
     useUpdateCourseMutation,
+    useMoveCourseOrderMutation,
+    useReorderCoursesMutation,
     useDeleteCourseMutation,
     useGetAllCategoriesQuery,
     useDeleteCategoryMutation,

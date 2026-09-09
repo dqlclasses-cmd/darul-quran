@@ -240,6 +240,7 @@ const CourseBuilder = () => {
           what_to_bring: course.whatToBring || "",
           start_date: course.startDate || "",
           google_form_link: course.googleFormLink || "",
+          display_tab: course.displayTab || "auto",
           ...normalizeLoadedEmailTriggers(course),
         });
 
@@ -346,6 +347,7 @@ const CourseBuilder = () => {
     what_to_bring: "",
     start_date: "",
     google_form_link: "",
+    display_tab: "auto",
     form_filler_template_id: "",
     admin_notification_template_id: "",
     admin_notification_emails: "",
@@ -519,6 +521,10 @@ const CourseBuilder = () => {
       class_description: formData.description || null,
       class_image: urlMap.thumbnail ?? thumbnailUrl ?? null,
       google_form_link: formData.google_form_link || null,
+      display_tab:
+        !formData.display_tab || formData.display_tab === "auto"
+          ? null
+          : formData.display_tab,
       email_template_id: formData.form_filler_template_id
         ? Number(formData.form_filler_template_id)
         : null,
@@ -1085,6 +1091,40 @@ const CourseBuilder = () => {
                             className="capitalize"
                           >
                             1:1 Class
+                          </SelectItem>
+                        </Select>
+                      </div>
+                      <div className="pt-4">
+                        <Select
+                          placeholder="Select display tab"
+                          label="Display Tab (Website)"
+                          labelPlacement="outside"
+                          title="Display Tab"
+                          radius="md"
+                          size="lg"
+                          variant="bordered"
+                          description="Choose which website tab this course appears under. Auto uses the course type (One Time Paid & Live → Online)."
+                          onSelectionChange={(k) => {
+                            const keys = [...k];
+                            handleChange("display_tab", keys[0] || "auto");
+                          }}
+                          selectedKeys={
+                            formData.display_tab
+                              ? new Set([String(formData.display_tab)])
+                              : new Set(["auto"])
+                          }
+                        >
+                          <SelectItem key="auto" value="auto">
+                            Auto (from course type)
+                          </SelectItem>
+                          <SelectItem key="live" value="live">
+                            Online Classes
+                          </SelectItem>
+                          <SelectItem key="in_person" value="in_person">
+                            In-Person Classes
+                          </SelectItem>
+                          <SelectItem key="one_to_one" value="one_to_one">
+                            One-to-One / 1:1
                           </SelectItem>
                         </Select>
                       </div>

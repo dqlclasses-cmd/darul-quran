@@ -17,6 +17,7 @@ import { useGetNotificationsQuery, useMarkAsReadMutation, useDeleteReadNotificat
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Swal from "sweetalert2";
+import { resolveNotificationUrl } from "../../lib/notificationLinks";
 
 const NotificationsPage = () => {
   const [search, setSearch] = useState("");
@@ -190,7 +191,14 @@ const NotificationsPage = () => {
                           </p>
 
                           <div className="flex flex-wrap items-center gap-3 mt-3 text-sm">
-                            {notif.url && <Link to={(notif.url || "#").replace("ROLE", user.role)} className="underline text-gray-600 font-medium hover:text-[#06574C]">View</Link>}
+                            {resolveNotificationUrl(notif.url, user?.role, notif) && (
+                              <Link
+                                to={resolveNotificationUrl(notif.url, user?.role, notif)}
+                                className="underline text-gray-600 font-medium hover:text-[#06574C]"
+                              >
+                                View Details
+                              </Link>
+                            )}
                             {!notif.is_read && (
                               <>
                                 <span className="text-gray-300">•</span>
