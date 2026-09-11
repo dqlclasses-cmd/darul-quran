@@ -16,7 +16,7 @@ import { api } from "../../services/api";
 import { successMessage, errorMessage } from "../../lib/toast.config";
 import { analyticsEvents } from "../../lib/analytics";
 
-const PasswordInput = ({ label, value, onChange, placeholder }) => {
+const PasswordInput = ({ label, value, onChange, placeholder, autoComplete = "password" }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -26,15 +26,17 @@ const PasswordInput = ({ label, value, onChange, placeholder }) => {
         className="rounded-md"
         placeholder={placeholder}
         value={value}
+        name="password"
+        autoComplete={autoComplete}
         type={showPassword ? "text" : "password"}
         endContent={
-          <span onClick={() => setShowPassword(!showPassword)}>
+          <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}>
             {showPassword ? (
               <EyeOffIcon className="cursor-pointer" size={20} />
             ) : (
               <EyeIcon className="cursor-pointer" size={20} />
             )}
-          </span>
+          </button>
         }
         onChange={onChange}
       />
@@ -81,7 +83,7 @@ const Login = () => {
 
     // const token = data.token;
     // if (token) {
-      // localStorage.setItem("token", token);
+    // localStorage.setItem("token", token);
 
     //   if (import.meta.env.PROD) {
     //     document.cookie = [
@@ -196,6 +198,8 @@ const Login = () => {
                     placeholder="youremail@example.com"
                     value={email}
                     type="email"
+                    name="email"
+                    autoComplete="email"
                     isRequired
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -256,6 +260,7 @@ const Login = () => {
                     <Input
                       className="rounded-md"
                       placeholder="First name"
+                      name="first_name"
                       value={firstName}
                       isRequired
                       onChange={(e) => setFirstName(e.target.value)}
@@ -266,6 +271,7 @@ const Login = () => {
                     <Input
                       className="rounded-md"
                       placeholder="Last name"
+                      name="last_name"
                       value={lastName}
                       isRequired
                       onChange={(e) => setLastName(e.target.value)}
@@ -280,6 +286,8 @@ const Login = () => {
                     placeholder="youremail@example.com"
                     value={registerEmail}
                     type="email"
+                    name="email"
+                    autoComplete="email"
                     isRequired
                     onChange={(e) => setRegisterEmail(e.target.value)}
                   />
@@ -297,6 +305,7 @@ const Login = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
+                  autoComplete='current-password'
                 />
 
                 <div className="flex max-sm:flex-wrap gap-3 w-full">
