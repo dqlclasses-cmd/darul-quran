@@ -26,6 +26,11 @@ const initialFormData = {
   websiteUrl: "",
   logoUrl: "",
   faviconUrl: "",
+  contactEmail: "",
+  contactPhone: "",
+  whatsappUrl: "",
+  instagramUrl: "",
+  facebookUrl: "",
 };
 
 const applySiteSettingsToState = (
@@ -40,6 +45,11 @@ const applySiteSettingsToState = (
     websiteUrl: settings?.websiteUrl || "",
     logoUrl: settings?.logoUrl || "",
     faviconUrl: settings?.faviconUrl || "",
+    contactEmail: settings?.contactEmail || "",
+    contactPhone: settings?.contactPhone || "",
+    whatsappUrl: settings?.whatsappUrl || "",
+    instagramUrl: settings?.instagramUrl || "",
+    facebookUrl: settings?.facebookUrl || "",
   });
   setLogoFiles(settings?.logoUrl ? [settings.logoUrl] : []);
   setFaviconFiles(settings?.faviconUrl ? [settings.faviconUrl] : []);
@@ -87,6 +97,11 @@ const SiteSettings = () => {
       websiteUrl: formData.websiteUrl.trim(),
       logoUrl: logoUrl || null,
       faviconUrl: faviconUrl || null,
+      contactEmail: formData.contactEmail.trim(),
+      contactPhone: formData.contactPhone.trim(),
+      whatsappUrl: formData.whatsappUrl.trim(),
+      instagramUrl: formData.instagramUrl.trim(),
+      facebookUrl: formData.facebookUrl.trim(),
     };
 
     try {
@@ -131,7 +146,7 @@ const SiteSettings = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <DashHeading
           title="Site Settings"
-          desc="Manage global website information and branding for the public site."
+          desc="Manage global website information, branding, and contact / social links for the public site."
         />
       </div>
 
@@ -197,6 +212,61 @@ const SiteSettings = () => {
               maxSize={2}
               height="140px"
               showFilesNamesThere={false}
+            />
+          </div>
+        </div>
+
+        <div className="border-t border-gray-100 pt-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-1">
+            Contact &amp; Social Links
+          </h3>
+          <p className="text-sm text-gray-500 mb-4">
+            These appear on the public website footer and contact page. Leave blank
+            to hide an icon or link.
+          </p>
+          <div className="space-y-5">
+            <Input
+              label="Contact Email"
+              placeholder="info@darulquranleicester.co.uk"
+              type="email"
+              variant="bordered"
+              labelPlacement="outside"
+              value={formData.contactEmail}
+              onChange={(e) => updateField("contactEmail", e.target.value)}
+            />
+            <Input
+              label="Contact Phone"
+              placeholder="+44 116 000 0000"
+              type="tel"
+              variant="bordered"
+              labelPlacement="outside"
+              value={formData.contactPhone}
+              onChange={(e) => updateField("contactPhone", e.target.value)}
+            />
+            <Input
+              label="WhatsApp Link or Number"
+              placeholder="https://wa.me/441160000000 or +44 116 000 0000"
+              variant="bordered"
+              labelPlacement="outside"
+              description="Used for the footer WhatsApp icon. Full wa.me link or phone number."
+              value={formData.whatsappUrl}
+              onChange={(e) => updateField("whatsappUrl", e.target.value)}
+            />
+            <Input
+              label="Instagram URL"
+              placeholder="https://www.instagram.com/yourprofile"
+              variant="bordered"
+              labelPlacement="outside"
+              value={formData.instagramUrl}
+              onChange={(e) => updateField("instagramUrl", e.target.value)}
+            />
+            <Input
+              label="Facebook URL"
+              placeholder="https://www.facebook.com/yourpage"
+              variant="bordered"
+              labelPlacement="outside"
+              value={formData.facebookUrl}
+              onChange={(e) => updateField("facebookUrl", e.target.value)}
             />
           </div>
         </div>
