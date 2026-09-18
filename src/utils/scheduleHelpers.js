@@ -76,7 +76,12 @@ const getZonedDateTime = (schedule, field, dateKey = null) => {
 
     if (!scheduleDate || !time) return null;
 
-    return fromZonedTime(`${scheduleDate} ${String(time).slice(0, 5)}`, timezone);
+    try {
+        const date = fromZonedTime(`${scheduleDate} ${String(time).slice(0, 5)}`, timezone);
+        return date && !isNaN(date.getTime()) ? date : null;
+    } catch (e) {
+        return null;
+    }
 };
 
 /**
@@ -608,8 +613,10 @@ export const groupAndSortSchedulesByDate = (schedules, filterType = "all", optio
             };
             const start = getScheduleStart(scheduleForDate, dateKey);
             const end = getScheduleEnd(scheduleForDate, dateKey);
-            const displayDateKey = start
-                ? `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`
+            const validStart = start && !isNaN(start.getTime()) ? start : null;
+            const validEnd = end && !isNaN(end.getTime()) ? end : null;
+            const displayDateKey = validStart
+                ? `${validStart.getFullYear()}-${String(validStart.getMonth() + 1).padStart(2, "0")}-${String(validStart.getDate()).padStart(2, "0")}`
                 : dateKey;
 
             if (!grouped[displayDateKey]) {
@@ -620,10 +627,10 @@ export const groupAndSortSchedulesByDate = (schedules, filterType = "all", optio
                 ...schedule,
                 date: displayDateKey,
                 sourceDate: dateKey,
-                startTime: formatTime24(start) || scheduleForDate.startTime,
-                endTime: formatTime24(end) || scheduleForDate.endTime,
-                startDateTime: start?.toISOString(),
-                endDateTime: end?.toISOString(),
+                startTime: formatTime24(validStart) || scheduleForDate.startTime,
+                endTime: formatTime24(validEnd) || scheduleForDate.endTime,
+                startDateTime: validStart?.toISOString(),
+                endDateTime: validEnd?.toISOString(),
             });
         });
     });
