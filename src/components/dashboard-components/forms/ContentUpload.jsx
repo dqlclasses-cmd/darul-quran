@@ -464,7 +464,7 @@ export function PdfAndNotes({ files, setFiles, courseId }) {
                     ))}
                 </div>
                 <div className="mt-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload PDF/Notes</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Notes</h3>
                     {isUploading ? (
                         <div className="w-full h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 px-4">
                             <Loader className="animate-spin h-8 w-8 text-[#06574C] mb-2" />
@@ -484,10 +484,11 @@ export function PdfAndNotes({ files, setFiles, courseId }) {
                             files={newFiles}
                             setFiles={setNewFiles}
                             showFilesThere={false}
-                            label="Drag & Drop PDF/Notes"
-                            text="or click to upload. Supports multiple files."
+                            label="Drag & Drop Notes"
+                            text="PDF, Word, Excel, PowerPoint, images, TXT, CSV — multiple files OK."
                             height="300px"
-                            fileType="pdf"
+                            fileType="notes"
+                            isMultiple
                         />
                     )}
                 </div>

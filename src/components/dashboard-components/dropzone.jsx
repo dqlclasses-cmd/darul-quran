@@ -14,7 +14,37 @@ const fileTypeMap = {
     "application/msword": [".doc"],
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
   },
-  assignment: { "application": [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"] }
+  // Class notes: documents, images, spreadsheets, slides, text
+  notes: {
+    "application/pdf": [".pdf"],
+    "application/msword": [".doc"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+      ".docx",
+    ],
+    "application/vnd.ms-excel": [".xls"],
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+      ".xlsx",
+    ],
+    "application/vnd.ms-powerpoint": [".ppt"],
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+      [".pptx"],
+    "text/plain": [".txt"],
+    "text/csv": [".csv"],
+    "application/rtf": [".rtf"],
+    "image/*": [".png", ".jpg", ".jpeg", ".webp", ".gif"],
+  },
+  assignment: {
+    "application/pdf": [".pdf"],
+    "application/msword": [".doc"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+      ".docx",
+    ],
+    "application/vnd.ms-excel": [".xls"],
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+      ".xlsx",
+    ],
+    "text/plain": [".txt"],
+  },
 };
 
 
@@ -22,7 +52,7 @@ const FileDropzone = ({
   label = "Upload your Course Thumbnail",
   text = ' Recommended: 1280x720 pixels',
   files,
-  fileType = "",// "image" | "video" | "pdf" | "assignment",
+  fileType = "", // "image" | "video" | "pdf" | "notes" | "assignment"
   maxSize = 100,
   setFiles,
   height = "280px",
