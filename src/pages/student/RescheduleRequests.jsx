@@ -64,6 +64,14 @@ const StudentRescheduleRequests = () => {
         return colors[status] || "default";
     };
 
+    const formatDateSafe = (dateVal) => {
+        if (!dateVal) return "-";
+        const datePart = typeof dateVal === "string" ? dateVal.split("T")[0] : new Date(dateVal).toISOString().split("T")[0];
+        const [year, month, day] = datePart.split("-").map(Number);
+        if (!year || !month || !day) return dateVal;
+        return new Date(year, month - 1, day).toLocaleDateString();
+    };
+
     const columns = [
         { key: "class", label: "Class" },
         { key: "originalSchedule", label: "Original Schedule" },
@@ -149,14 +157,14 @@ const StudentRescheduleRequests = () => {
                                     <div>
                                         <p className="font-medium text-sm">{request.scheduleTitle}</p>
                                         <p className="text-xs text-gray-500">
-                                            {new Date(request.scheduleDate).toLocaleDateString()}
+                                            {formatDateSafe(request.originaldate || request.scheduleDate)}
                                         </p>
                                     </div>
                                 </TableCell>
                                 <TableCell>
                                     <div className="text-sm">
-                                        <p>
-                                            {new Date(request.scheduleDate).toLocaleDateString()}
+                                        <p className="font-medium text-gray-800">
+                                            {formatDateSafe(request.originaldate || request.scheduleDate)}
                                         </p>
                                         <p className="text-gray-500">
                                             {formatTime12Hour(request.scheduleStartTime)}
@@ -166,7 +174,7 @@ const StudentRescheduleRequests = () => {
                                 <TableCell>
                                     <div className="text-sm">
                                         <p className="font-medium text-[#06574C]">
-                                            {new Date(request.requestedDate).toLocaleDateString()}
+                                            {formatDateSafe(request.requestedDate)}
                                         </p>
                                         <p className="text-gray-500">
                                             {formatTime12Hour(request.requestedStartTime)} -{" "}

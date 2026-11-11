@@ -127,6 +127,13 @@ const TeacherClassSheduling = () => {
   const [quickReschedule, { isLoading: isQuickRescheduling }] = useQuickRescheduleMutation();
 
   const { onOpenChange, isOpen } = useDisclosure();
+  const formatDateSafe = (dateVal) => {
+    if (!dateVal) return "-";
+    const datePart = typeof dateVal === "string" ? dateVal.split("T")[0] : new Date(dateVal).toISOString().split("T")[0];
+    const [year, month, day] = datePart.split("-").map(Number);
+    if (!year || !month || !day) return dateVal;
+    return new Date(year, month - 1, day).toLocaleDateString();
+  };
   const {
     isOpen: isDateModalOpen,
     onOpen: openDateModal,
@@ -1334,7 +1341,8 @@ const TeacherClassSheduling = () => {
               >
                 <TableHeader>
                   <TableColumn key="student">Student</TableColumn>
-                  <TableColumn key="requestedSchedule">Requested Schedule</TableColumn>
+                  <TableColumn key="originalClass">Original Class</TableColumn>
+                  <TableColumn key="requestedSchedule">Requested Reschedule</TableColumn>
                   <TableColumn key="reason">Reason</TableColumn>
                   <TableColumn key="status">Status</TableColumn>
                   <TableColumn key="requestedAt">Requested At</TableColumn>
@@ -1372,10 +1380,20 @@ const TeacherClassSheduling = () => {
                           </div>
                         </TableCell>
                         <TableCell>
+                          <div className="text-sm">
+                            <p className="font-medium text-gray-800">
+                              {formatDateSafe(request.originaldate || request.scheduleDate)}
+                            </p>
+                            <p className="text-gray-500">
+                              {formatTime12Hour(request.scheduleStartTime)}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <div className="text-sm space-y-1">
                             <div>
                               <p className="font-medium text-[#06574C]">
-                                {new Date(request.requestedDate).toLocaleDateString()}
+                                {formatDateSafe(request.requestedDate)}
                               </p>
                               <p className="text-gray-700 font-semibold">
                                 {formatTime12Hour(request.requestedStartTime)} - {formatTime12Hour(request.requestedEndTime)}
@@ -1490,13 +1508,19 @@ const TeacherClassSheduling = () => {
                   <p className="text-sm text-gray-600 mb-2">
                     <strong>Class:</strong> {selectedRescheduleRequest.scheduleTitle}
                   </p>
+                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg mb-2">
+                    <p className="text-xs font-semibold text-amber-800 mb-0.5">Original Class Session:</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {formatDateSafe(selectedRescheduleRequest.originaldate || selectedRescheduleRequest.scheduleDate)} &bull; {formatTime12Hour(selectedRescheduleRequest.scheduleStartTime)}
+                    </p>
+                  </div>
                   <div className="bg-gray-50 p-3 rounded-lg space-y-2">
                     <div>
                       <p className="text-xs font-semibold text-gray-500 mb-0.5">
                         Student Requested Time ({studentTz}):
                       </p>
                       <p className="text-sm font-medium text-gray-800">
-                        {new Date(selectedRescheduleRequest.requestedDate).toLocaleDateString()} &bull; {formatTime12Hour(selectedRescheduleRequest.requestedStartTime)} - {formatTime12Hour(selectedRescheduleRequest.requestedEndTime)}
+                        {formatDateSafe(selectedRescheduleRequest.requestedDate)} &bull; {formatTime12Hour(selectedRescheduleRequest.requestedStartTime)} - {formatTime12Hour(selectedRescheduleRequest.requestedEndTime)}
                       </p>
                     </div>
                     {isDifferentTz && (

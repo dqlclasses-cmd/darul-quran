@@ -118,7 +118,14 @@ const StudentClassSchedule = () => {
 
     // Check if student can reschedule (more than 4 hours before class)
     const canReschedule = (schedule) => {
-        const scheduleDateTime = new Date(`${schedule.date}T${schedule.startTime}`);
+        const scheduleDates = schedule.scheduleDates?.length > 0
+            ? schedule.scheduleDates
+            : (schedule.date ? [schedule.date] : []);
+        const todayStr = new Date().toISOString().split('T')[0];
+        const upcomingDates = scheduleDates.filter(d => (typeof d === 'string' ? d.split('T')[0] : new Date(d).toISOString().split('T')[0]) >= todayStr);
+        if (upcomingDates.length === 0) return false;
+        const nextDate = typeof upcomingDates[0] === 'string' ? upcomingDates[0].split('T')[0] : new Date(upcomingDates[0]).toISOString().split('T')[0];
+        const scheduleDateTime = new Date(`${nextDate}T${schedule.startTime}`);
         const now = new Date();
         const hoursUntilClass = (scheduleDateTime - now) / (1000 * 60 * 60);
         return hoursUntilClass > 4;

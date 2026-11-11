@@ -1,5 +1,16 @@
-import { useState, useEffect } from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, Chip } from "@heroui/react";
+import { useState, useEffect, useMemo } from "react";
+import {
+    Modal,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    Button,
+    Input,
+    Textarea,
+    Select,
+    SelectItem,
+} from "@heroui/react";
 import { formatTime12Hour } from "../../utils/scheduleHelpers";
 
 export const RescheduleRequestModal = ({
@@ -9,21 +20,83 @@ export const RescheduleRequestModal = ({
     onSubmit,
     isSubmitting
 }) => {
+    const [selectedOriginalDate, setSelectedOriginalDate] = useState("");
     const [requestedDate, setRequestedDate] = useState("");
     const [requestedStartTime, setRequestedStartTime] = useState("");
     const [requestedEndTime, setRequestedEndTime] = useState(""); 
     const [reason, setReason] = useState("");
     const [errors, setErrors] = useState({});
 
+    // Collect all candidate dates for this schedule
+    const availableDates = useMemo(() => {
+        if (!schedule) return [];
+        const todayStr = new Date().toISOString().split("T")[0];
+        let dates = [];
+        if (Array.isArray(schedule.scheduleDates) && schedule.scheduleDates.length > 0) {
+            dates = [...schedule.scheduleDates];
+        }
+        if (schedule.specificDates && typeof schedule.specificDates === "object") {
+            dates = [...dates, ...Object.keys(schedule.specificDates)];
+        }
+        if (schedule.date) {
+            const d = typeof schedule.date === "string" ? schedule.date.split("T")[0] : new Date(schedule.date).toISOString().split("T")[0];
+            if (!dates.includes(d)) dates.push(d);
+        }
+        const normalized = Array.from(
+            new Set(
+                dates.map((d) =>
+                    typeof d === "string"
+                        ? d.split("T")[0]
+                        : new Date(d).toISOString().split("T")[0]
+                )
+            )
+        ).sort();
+
+        // Prefer dates starting from today
+        const upcoming = normalized.filter((d) => d >= todayStr);
+        return upcoming.length > 0 ? upcoming : normalized;
+    }, [schedule]);
+
     useEffect(() => {
         if (isOpen && schedule) {
             setRequestedDate("");
-            setRequestedStartTime("");
-            setRequestedEndTime("");
+            setRequestedStartTime(schedule.startTime || "");
+            setRequestedEndTime(schedule.endTime || "");
             setReason("");
             setErrors({});
+
+            // Pick the best default original date to reschedule
+            const todayStr = new Date().toISOString().split("T")[0];
+            let defaultDate = "";
+            if (schedule.selectedDate) {
+                defaultDate = typeof schedule.selectedDate === "string" ? schedule.selectedDate.split("T")[0] : new Date(schedule.selectedDate).toISOString().split("T")[0];
+            } else if (availableDates.length > 0) {
+                const schedDateStr = schedule.date ? (typeof schedule.date === "string" ? schedule.date.split("T")[0] : new Date(schedule.date).toISOString().split("T")[0]) : null;
+                if (schedDateStr && schedDateStr >= todayStr && availableDates.includes(schedDateStr)) {
+                    defaultDate = schedDateStr;
+                } else {
+                    defaultDate = availableDates[0];
+                }
+            } else if (schedule.date) {
+                defaultDate = typeof schedule.date === "string" ? schedule.date.split("T")[0] : new Date(schedule.date).toISOString().split("T")[0];
+            }
+            setSelectedOriginalDate(defaultDate);
         }
-    }, [isOpen, schedule]);
+    }, [isOpen, schedule, availableDates]);
+
+    const formatDateDisplay = (dateVal) => {
+        if (!dateVal) return "-";
+        const datePart = typeof dateVal === "string" ? dateVal.split("T")[0] : new Date(dateVal).toISOString().split("T")[0];
+        const [year, month, day] = datePart.split("-").map(Number);
+        if (!year || !month || !day) return dateVal;
+        const d = new Date(year, month - 1, day);
+        return d.toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+    };
 
     const validateForm = () => {
         const newErrors = {};
@@ -64,11 +137,21 @@ export const RescheduleRequestModal = ({
     const handleSubmit = () => {
         if (!validateForm()) return;
 
+        const originalDateToSubmit =
+            selectedOriginalDate ||
+            availableDates[0] ||
+            (schedule.date
+                ? (typeof schedule.date === "string"
+                    ? schedule.date.split("T")[0]
+                    : new Date(schedule.date).toISOString().split("T")[0])
+                : requestedDate);
+
         onSubmit({
             scheduleId: schedule.id,
             courseId: schedule.courseId,
             requestedDate,
-            originaldate: schedule.date,
+            originaldate: originalDateToSubmit,
+            originalDate: originalDateToSubmit,
             requestedStartTime,
             requestedEndTime,
             reason,
@@ -107,19 +190,43 @@ export const RescheduleRequestModal = ({
                 <ModalBody>
                     {schedule && (
                         <div className="bg-[#95C4BE]/20 rounded-lg p-4 mb-4">
-                            <h3 className="font-semibold text-[#06574C] mb-2">Current Schedule</h3>
-                            <div className="space-y-1 text-sm">
+                            <h3 className="font-semibold text-[#06574C] mb-2">Current Class Session</h3>
+                            <div className="space-y-2 text-sm">
                                 <p className="text-gray-700"><strong>Class:</strong> {schedule.title}</p>
+                                {schedule.courseName && (
+                                    <p className="text-gray-700"><strong>Course:</strong> {schedule.courseName}</p>
+                                )}
+
+                                {availableDates.length > 1 ? (
+                                    <div className="mt-2">
+                                        <label className="block text-xs font-semibold text-[#06574C] mb-1">
+                                            Select Class Date to Reschedule:
+                                        </label>
+                                        <Select
+                                            size="sm"
+                                            aria-label="Select class date to reschedule"
+                                            selectedKeys={selectedOriginalDate ? [selectedOriginalDate] : []}
+                                            onChange={(e) => setSelectedOriginalDate(e.target.value)}
+                                            className="w-full bg-white rounded-md"
+                                        >
+                                            {availableDates.map((date) => (
+                                                <SelectItem key={date} value={date}>
+                                                    {formatDateDisplay(date)}
+                                                </SelectItem>
+                                            ))}
+                                        </Select>
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-700">
+                                        <strong>Date to Reschedule:</strong> {formatDateDisplay(selectedOriginalDate || availableDates[0] || schedule.date)}
+                                    </p>
+                                )}
+
                                 <p className="text-gray-700">
-                                    <strong>Date:</strong> {new Date(schedule.date).toLocaleDateString('en-US', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })}
-                                </p>
-                                <p className="text-gray-700">
-                                    <strong>Time:</strong> {formatTime12Hour(schedule.startTime)} - {formatTime12Hour(schedule.endTime)}
+                                    <strong>Current Timing:</strong>{" "}
+                                    {schedule?.specificDates?.[selectedOriginalDate]?.startTime
+                                        ? `${formatTime12Hour(schedule.specificDates[selectedOriginalDate].startTime)} - ${formatTime12Hour(schedule.specificDates[selectedOriginalDate].endTime)}`
+                                        : `${formatTime12Hour(schedule.startTime)} - ${formatTime12Hour(schedule.endTime)}`}
                                 </p>
                             </div>
                         </div>
@@ -189,7 +296,7 @@ export const RescheduleRequestModal = ({
 
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                         <p className="text-sm text-blue-800">
-                            <strong>ℹ Information:</strong> Your request will be reviewed by the admin team. You will be notified via email once a decision is made.
+                            <strong>ℹ Information:</strong> Your request will be reviewed by the teacher / admin team. You will be notified via email once a decision is made.
                         </p>
                     </div>
                 </ModalBody>
