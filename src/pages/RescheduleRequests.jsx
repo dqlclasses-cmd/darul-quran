@@ -30,8 +30,17 @@ import {
 import { errorMessage, successMessage } from "../lib/toast.config";
 import { formatTime12Hour, formatTimeInViewerTimezone, formatDateInViewerTimezone } from "../utils/scheduleHelpers";
 import { Calendar as CalendarIcon, Eye, Globe } from "lucide-react";
+import { dateFormatter } from "../lib/utils";
 
 const AdminRescheduleRequests = () => {
+    const formatDateSafe = (dateVal) => {
+        if (!dateVal) return "-";
+        const datePart = typeof dateVal === "string" ? dateVal.split("T")[0] : new Date(dateVal).toISOString().split("T")[0];
+        const [year, month, day] = datePart.split("-").map(Number);
+        if (!year || !month || !day) return dateVal;
+        return new Date(year, month - 1, day).toLocaleDateString();
+    };
+
     const [searchParams, setSearchParams] = useSearchParams();
     const [page, setPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState("all");
@@ -235,8 +244,8 @@ const AdminRescheduleRequests = () => {
                                 </TableCell>
                                 <TableCell>
                                     <div className="text-sm">
-                                        <p>
-                                            {new Date(request?.originaldate || request.scheduleDate ).toLocaleDateString()}
+                                        <p className="font-medium text-gray-800">
+                                            {dateFormatter(request?.originaldate || request.scheduleDate)}
                                         </p>
                                         <p className="text-gray-500">
                                             {formatTime12Hour(request?.scheduleStartTime)}
@@ -247,7 +256,7 @@ const AdminRescheduleRequests = () => {
                                     <div className="text-sm space-y-1">
                                         <div>
                                             <p className="font-medium text-[#06574C]">
-                                                {new Date(request.requestedDate).toLocaleDateString()}
+                                                {dateFormatter(request.requestedDate)}
                                             </p>
                                             <p className="text-gray-700 font-semibold">
                                                 {formatTime12Hour(request.requestedStartTime)} - {formatTime12Hour(request.requestedEndTime)}
@@ -357,13 +366,19 @@ const AdminRescheduleRequests = () => {
                                 <p className="text-sm text-gray-600 mb-2">
                                     <strong>Class:</strong> {selectedRequest.scheduleTitle}
                                 </p>
+                                <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg mb-2">
+                                    <p className="text-xs font-semibold text-amber-800 mb-0.5">Original Class Session:</p>
+                                    <p className="text-sm font-medium text-gray-800">
+                                        {formatDateSafe(selectedRequest.originaldate || selectedRequest.scheduleDate)} &bull; {formatTime12Hour(selectedRequest.scheduleStartTime)}
+                                    </p>
+                                </div>
                                 <div className="bg-gray-50 p-3 rounded-lg space-y-2">
                                     <div>
                                         <p className="text-xs font-semibold text-gray-500 mb-0.5">
                                             Student Requested Time ({studentTz}):
                                         </p>
                                         <p className="text-sm font-medium text-gray-800">
-                                            {new Date(selectedRequest.requestedDate).toLocaleDateString()} &bull; {formatTime12Hour(selectedRequest.requestedStartTime)} - {formatTime12Hour(selectedRequest.requestedEndTime)}
+                                            {formatDateSafe(selectedRequest.requestedDate)} &bull; {formatTime12Hour(selectedRequest.requestedStartTime)} - {formatTime12Hour(selectedRequest.requestedEndTime)}
                                         </p>
                                     </div>
                                     {isDifferentTz && (
@@ -451,7 +466,7 @@ const AdminRescheduleRequests = () => {
                                         </p>
                                         <p className="text-sm">
                                             <strong>Original:</strong>{" "}
-                                            {new Date(selectedRequest?.originaldate || selectedRequest.scheduleDate).toLocaleDateString()}{" "}
+                                            {formatDateSafe(selectedRequest?.originaldate || selectedRequest.scheduleDate)}{" "}
                                             {formatTime12Hour(selectedRequest?.scheduleStartTime)}
                                         </p>
                                     </div>
@@ -459,7 +474,7 @@ const AdminRescheduleRequests = () => {
                                     <div className="bg-[#E8F5F2] rounded-lg p-3 space-y-2">
                                         <p className="text-xs font-semibold text-[#06574C]">Requested Schedule</p>
                                         <p className="text-sm font-medium">
-                                            {new Date(selectedRequest.requestedDate).toLocaleDateString()} &bull;{" "}
+                                            {formatDateSafe(selectedRequest.requestedDate)} &bull;{" "}
                                             {formatTime12Hour(selectedRequest.requestedStartTime)} -{" "}
                                             {formatTime12Hour(selectedRequest.requestedEndTime)}
                                             <span className="text-xs font-normal text-gray-500 ml-1">({studentTz})</span>
